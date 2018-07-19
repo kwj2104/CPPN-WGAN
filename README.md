@@ -23,9 +23,7 @@ Run 'Interpolator.py' to generate images and gifs. In the main method you can ed
 
 Trained Samples:
 
-![MNIST](samples_mnist_2.png)
-![Cifar10](/generated_img/samples_cifar10.jpg =250x250)
-![CASIA](/generated_img/samples_63299.png =250x250)
+![MNIST](samples_mnist_2.png)![Cifar10](/generated_img/samples_cifar10.jpg=250x250)![CASIA](/generated_img/samples_63299.png=250x250)
 
 
 ### Special Thanks
