@@ -23,8 +23,12 @@ Run 'Interpolator.py' to generate images and gifs. In the main method you can ed
 
 Trained Samples:
 
-![MNIST](samples_mnist_2.png)![Cifar10](/generated_img/samples_cifar10.jpg=250x250)![CASIA](/generated_img/samples_63299.png=250x250)
+![MNIST](generated_img/samples_mnist_2.png)![Cifar10](generated_img/samples_cifar10.jpg)![CASIA](generated_img/samples_63299.png)
 
+Gifs:
+
+![Cifar10](generated_img/cifar10_movie.gif)
+![CASIA](generated_img/movie_CASIA.gif)
 
 ### Special Thanks
 Many thanks to @caogang for their WGAN-GP implementation which I heavily relied on for my code.
