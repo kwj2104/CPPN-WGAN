@@ -12,7 +12,6 @@ import PIL
 dataset = 'competition-gnt'
 
 def make_square(im, min_size=64, fill_color='white', resize=32):
-    #img = Image.fromarray(np.uint8(im * 255) , 'L')
     img = im
     x, y = img.size
     size = max(min_size, x, y)
@@ -20,7 +19,6 @@ def make_square(im, min_size=64, fill_color='white', resize=32):
     new_img.paste(img, ((size - x) // 2, (size - y) // 2))
     new_img = new_img.resize([resize,resize],PIL.Image.ANTIALIAS)
     
-    #return np.array(new_img.getdata())
     return new_img
 
 class CasiaDataset(Dataset):
@@ -28,7 +26,7 @@ class CasiaDataset(Dataset):
         
         #Download CASIA Dataset
         casia = CASIA(path=data_dir)
-        #casia.get_dataset(dataset)
+        casia.get_dataset(dataset)
         
         self.images = []
         self.labels = []
