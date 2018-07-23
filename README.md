@@ -1,4 +1,4 @@
-A series of experiments on using Compositional Pattern Producing Networks and GANs. See the two part blog posts [here](https://kwj2104.github.io/2018/cppngan/) and [here](https://kwj2104.github.io/2018/cppngan-2/).
+A series of experiments on using Compositional Pattern Producing Networks and GANs. **See the two part blog posts [here](https://kwj2104.github.io/2018/cppngan/) and [here](https://kwj2104.github.io/2018/cppngan-2/).**
 
 # CPPN
 
@@ -41,7 +41,7 @@ Code is pretty unstable. Feel free to experiment with what is in the CPPN-GAN-OL
 # CPPN-WGAN
 
 Generate images with CPPNs and Wasserstein GANs.
- 
+
 
 ## Working with datasets (CIFAR10 and CASIA)
 
