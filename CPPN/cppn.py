@@ -1,16 +1,27 @@
 import torch
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
 import torch.nn as nn
 from torch.autograd import Variable as V
-import torch.nn.functional as F
-from torch.distributions import Normal
 import matplotlib.pyplot as plt
+import argparse
+import matplotlib
+from pylab import savefig
 
 import numpy as np
 
-np.random.seed(11112)
-torch.manual_seed(11112)
+parser = argparse.ArgumentParser(description='Create a Simple CPPN')
+
+# Path Arguments
+parser.add_argument('--random_seed', type=int, default=1,
+                    help='random seed')
+parser.add_argument('--dim', type=int, default=500)
+parser.add_argument('--cchannel', type=int, default=3)
+parser.add_argument('--scaling', type=int, default=8)
+parser.add_argument('--layer_size', type=int, default=32)
+
+args = parser.parse_args()
+
+np.random.seed(args.random_seed)
+torch.manual_seed(args.random_seed)
 
 
 class CPPN(nn.Module):
@@ -82,7 +93,7 @@ def get_coordinates(x_dim = 32, y_dim = 32, scale = 10.0, batch_size = 1):
     r_mat = np.tile(r_mat.flatten(), batch_size).reshape(batch_size, n_points, 1)
     return torch.from_numpy(x_mat).float(), torch.from_numpy(y_mat).float(), torch.from_numpy(r_mat).float()
          
-def show_image(image_data, c_dim = 1):
+def save_image(image_data, c_dim = 1):
     '''
     image_data is a tensor, in [height width depth]
     image_data is NOT the PIL.Image class
@@ -95,17 +106,24 @@ def show_image(image_data, c_dim = 1):
     else:
       plt.imshow(image_data.reshape(y_dim, x_dim), cmap='Greys', interpolation='nearest')
     plt.axis('off')
-    plt.show()
-
-x_d = 500
-y_d = 500
-c_d = 3
-nodes = 32
-scaling = 8
-
-model = CPPN(x_dim = x_d, y_dim = y_d, c_dim = c_d, net_size = nodes)
-x, y, r = get_coordinates(x_dim = x_d, y_dim = y_d, scale = scaling)
-
-result = model.forward(x, y, r).squeeze(0).view(x_d, y_d, c_d).data.numpy()
-
-show_image(result, c_dim = c_d)
+    ##plt.show()
+    
+    plt.gca().set_axis_off()
+    plt.gca().xaxis.set_major_locator(matplotlib.ticker.NullLocator())
+    plt.gca().yaxis.set_major_locator(matplotlib.ticker.NullLocator())
+    
+    savefig('examples/figure_' 
+            + str(args.cchannel) + '_' 
+            + str(args.random_seed) + '_' 
+            + str(args.layer_size) + '.png', bbox_inches='tight', pad_inches=0.0)
+    
+if __name__ == "__main__":
+    
+#    print('examples/figure_' + str(args.cchannel))
+#    raise Exception()
+    
+    model = CPPN(x_dim = args.dim, y_dim = args.dim, c_dim = args.cchannel, net_size = args.layer_size)
+    x, y, r = get_coordinates(x_dim = args.dim, y_dim = args.dim, scale = args.scaling)   
+    result = model.forward(x, y, r).squeeze(0).view(args.dim, args.dim, args.cchannel).data.numpy()
+    
+    save_image(result, c_dim = args.cchannel)

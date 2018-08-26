@@ -8,8 +8,7 @@ import torchvision.utils as vutils
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--devid", type=int, default=-1)
-    parser.add_argument("--epoch", type=int, default=10)
+    parser.add_argument("--epoch", type=int, default=3)
     parser.add_argument("--latdim", type=int, default=32)
     parser.add_argument("--ngf", type=int, default=64)
     parser.add_argument("--ndf", type=int, default=64)
@@ -20,21 +19,25 @@ def parse_args():
     parser.add_argument("--handicap", type=int, default=3)
     parser.add_argument("--th_high", type=int, default=100)
     parser.add_argument("--th_low", type=int, default=0)
+    parser.add_argument("--random_seed", type=int, default=1111)
     return parser.parse_args()
 
 args = parse_args()
 
-#torch.manual_seed(1111)
-#if args.devid >= 0:
-#    torch.cuda.manual_seed(1111)
+use_cuda = torch.cuda.is_available()
+device = torch.device("cuda" if use_cuda else "cpu")
 
-def train_gan(G, D, train_loader, optim_disc, optim_gen, seed_dist, x, y, r):
+torch.manual_seed(args.random_seed)
+if use_cuda:
+    torch.cuda.manual_seed(args.random_seed)
+
+def train_gan(G, D, train_loader, optim_disc, optim_gen, seed_dist, x, y, r, epoch):
     iter_counter = 0
     for t in train_loader:
         img, _ = t
         if img.size()[0] < args.bsize : continue
-        if args.devid >= 0:
-            img = img.cuda()
+        
+        img = img.to(device)
 
         optim_disc.zero_grad()
         optim_gen.zero_grad()
@@ -46,8 +49,7 @@ def train_gan(G, D, train_loader, optim_disc, optim_gen, seed_dist, x, y, r):
         # Give handicap to generator by giving it extra steps to adjust weights
         for i in range(args.handicap):
             seed = torch.bmm(torch.ones(args.bsize, 28 * 28, 1), seed_dist.sample().unsqueeze(1))
-            if args.devid >= 0:
-                seed = seed.cuda()
+            seed = seed.to(device)
             
             x_fake = G(x, y, r, seed)
             d = D(x_fake)
@@ -65,8 +67,7 @@ def train_gan(G, D, train_loader, optim_disc, optim_gen, seed_dist, x, y, r):
         # Grad fake
         # -E[log(1 - D(G(z)) )]
         seed = torch.bmm(torch.ones(args.bsize, 28 * 28, 1), seed_dist.sample().unsqueeze(1))
-        if args.devid >= 0:
-            seed = seed.cuda()
+        seed = seed.to(device)
         
         x_fake = G(x, y, r, seed)
         d = D(x_fake.detach())     
@@ -85,11 +86,10 @@ def train_gan(G, D, train_loader, optim_disc, optim_gen, seed_dist, x, y, r):
         # Save samples
         if iter_counter % 800 == 0:
             seed = torch.bmm(torch.ones(args.bsize, 28 * 28, 1), seed_dist.sample().unsqueeze(1))
-            if args.devid >= 0:
-                seed = seed.cuda()
+            seed = seed.to(device)
             x_fake = G(x, y, r, seed)
             vutils.save_image(x_fake.data,
-            'images/GAN_samples.png',
+            'images/GAN_samples_' + str(epoch) + '.png',
             normalize=True)
         
         iter_counter += 1
@@ -98,11 +98,9 @@ def train_gan(G, D, train_loader, optim_disc, optim_gen, seed_dist, x, y, r):
 
 if __name__ == "__main__":
     train_loader = load_mnist(args.bsize)
-    x_d = 28
-    y_d = 28
     
-    G = DC_Generator(x_dim = x_d, y_dim = y_d, z_dim=args.latdim, batch_size = args.bsize)
-    D = DC_Discriminator(1, args.ndf)
+    G = DC_Generator(x_dim = 28, y_dim = 28, z_dim=args.latdim, batch_size = args.bsize).to(device)
+    D = DC_Discriminator(1, args.ndf).to(device)
     optim_gen = torch.optim.Adam(G.parameters(), lr=args.lr_g, betas=(args.beta1, 0.999))    
     optim_disc = torch.optim.Adam(D.parameters(), lr=args.lr_d, betas=(args.beta1, 0.999))
     
@@ -110,35 +108,18 @@ if __name__ == "__main__":
     seed_distribution = Normal(V(torch.zeros(args.bsize, args.latdim)), 
                                V(torch.ones(args.bsize, args.latdim)))
     
-    if args.devid >= 0:
-        G.cuda()
-        D.cuda()
         
     #init cppn coordinates
-    x, y, r = get_coordinates(x_d, y_d, batch_size=args.bsize)
-    if args.devid >= 0:
-        x = x.cuda()
-        y = y.cuda()
-        r = r.cuda()
+    x, y, r = get_coordinates(28, 28, batch_size=args.bsize)
+    x = x.to(device)
+    y = y.to(device)
+    r = r.to(device)
     
     #Train
     print("Training..")
     for epoch in range(args.epoch):
         print("Training Epoch {}".format(epoch + 1))
-        train_gan(G, D, train_loader, optim_disc, optim_gen, seed_distribution, x, y, r)
-        if epoch > 1:
-            x_b, y_b, r_b = get_coordinates(1080, 1080, 1)
-            if args.devid >= 0:
-                x_b = x_b.cuda()
-                y_b = y_b.cuda()
-                r_b = r_b.cuda()
-            seed = torch.bmm(torch.ones(args.bsize, 1080 * 1080, 1), seed_distribution.sample().unsqueeze(1))
-            if args.devid >= 0:
-                seed = seed.cuda()
-            fake = G(x_b, y_b, r_b, seed[0])
-            vutils.save_image(fake.data,
-            'images/GAN_blowup.png',
-            normalize=True)
+        train_gan(G, D, train_loader, optim_disc, optim_gen, seed_distribution, x, y, r, epoch=epoch)
         
     torch.save(G.state_dict(), "G.pth")
     torch.save(D.state_dict(), "D.pth")
