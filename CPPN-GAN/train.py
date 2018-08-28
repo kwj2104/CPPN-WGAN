@@ -89,7 +89,7 @@ def train_gan(G, D, train_loader, optim_disc, optim_gen, seed_dist, x, y, r, epo
             seed = seed.to(device)
             x_fake = G(x, y, r, seed)
             vutils.save_image(x_fake.data,
-            'images/GAN_samples_' + str(epoch) + '.png',
+            'GAN_samples_' + str(epoch) + '.png',
             normalize=True)
         
         iter_counter += 1
