@@ -1,6 +1,5 @@
 import os, sys
 sys.path.append(os.getcwd())
-import tflib as lib
 import save_images as save_images
 import torch
 import torch.autograd as autograd
@@ -15,9 +14,9 @@ def parse_args():
     parser.add_argument("--latdim", type=int, default=32)
     parser.add_argument("--bsize", type=int, default=64)
     parser.add_argument("--random_seed", type=int, default=1111)
-    parser.add_argument("--sample", type=bool, default=True)
+    parser.add_argument("--sample", type=bool, default=False)
     parser.add_argument("--large_dim", type=int, default=500)
-    parser.add_argument("--large_sample", type=int, default=0)
+    parser.add_argument("--large_sample", type=int, default=-1)
     parser.add_argument("--frames", type=int, default=10)
     parser.add_argument('--interpolate', nargs='*', type=int)
     
@@ -94,7 +93,7 @@ def interpolate(state_dict, generator, preview = True, interpolate = False, larg
         assert args.sample < args.bsize, "Sample position is out of bounds"
         
         noise = noise.to(device)
-        noisev = autograd.Variable(noise[position], volatile=True)
+        noisev = autograd.Variable(noise[large_sample], volatile=True)
         ones = torch.ones(1, x_large * y_large, 1).to(device)
         seed = torch.bmm(ones, noisev.unsqueeze(0).unsqueeze(0))
         x, y, r = model.get_coordinates(x_large, y_large, batch_size=1)
@@ -113,7 +112,7 @@ def interpolate(state_dict, generator, preview = True, interpolate = False, larg
         images = []
         
         noise = noise.to(device)
-        noisev = autograd.Variable(noise[position], volatile=True)
+        noisev = autograd.Variable(noise[samples[0]], volatile=True)
         ones = torch.ones(1, x_large * y_large, 1).to(device)
         seed = torch.bmm(ones, noisev.unsqueeze(0).unsqueeze(0))
         x, y, r = model.get_coordinates(x_large, y_large, batch_size=1)
@@ -138,6 +137,10 @@ def interpolate(state_dict, generator, preview = True, interpolate = False, larg
         
         
 if __name__ == "__main__":
+    
+
+    if not os.path.exists("generated_img"):
+        os.makedirs("generated_img")
     
     interp = False
     interp_list = []
