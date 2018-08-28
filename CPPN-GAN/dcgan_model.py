@@ -91,7 +91,7 @@ class DC_Generator(nn.Module):
 
         U = self.linear1(z) + self.linear2(x) + self.linear3(y) + self.linear4(r)   
         
-        result = self.lin_seq(U).squeeze(2).view(x.size()[0], math.sqrt(x.size()[1]), math.sqrt(x.size()[1])).unsqueeze(1)
+        result = self.lin_seq(U).squeeze(2).view(x.size()[0], round(math.sqrt(x.size()[1])), round(math.sqrt(x.size()[1]))).unsqueeze(1)
         
         return result
     
