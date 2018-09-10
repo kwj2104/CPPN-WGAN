@@ -5,6 +5,8 @@ from util import load_mnist
 from torch.distributions import Normal
 from dcgan_model import DC_Discriminator, DC_Generator, get_coordinates
 import torchvision.utils as vutils
+import numpy as np
+import random
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -19,13 +21,20 @@ def parse_args():
     parser.add_argument("--handicap", type=int, default=3)
     parser.add_argument("--th_high", type=int, default=100)
     parser.add_argument("--th_low", type=int, default=0)
-    parser.add_argument("--random_seed", type=int, default=1111)
+    parser.add_argument("--random_seed", type=int, default=123)
+    parser.add_argument("--deterministic", type=bool, default=True)
     return parser.parse_args()
 
 args = parse_args()
 
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
+
+
+np.random.seed(args.random_seed)
+random.seed(args.random_seed)
+
+torch.backends.cudnn.deterministic=args.deterministic
 
 torch.manual_seed(args.random_seed)
 if use_cuda:
