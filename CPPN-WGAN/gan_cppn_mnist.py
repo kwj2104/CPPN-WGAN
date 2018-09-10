@@ -8,6 +8,7 @@ matplotlib.use('Agg')
 import numpy as np
 
 import tflib as lib
+from tflib import save_images
 import tflib.mnist
 import tflib.plot
 
@@ -20,6 +21,12 @@ torch.manual_seed(1)
 use_cuda = torch.cuda.is_available()
 if use_cuda:
     gpu = 0
+    
+if not os.path.exists("tmp"):
+    os.makedirs("tmp")
+
+if not os.path.exists("tmp/mnist"):
+    os.makedirs("tmp/mnist")
 
 DIM = 64 # Model dimensionality
 BATCH_SIZE = 50 # Batch size
@@ -28,7 +35,7 @@ LAMBDA = 10 # Gradient penalty lambda hyperparameter
 ITERS = 60000 # How many generator iterations to train for
 OUTPUT_DIM = 784 # Number of pixels in MNIST (28*28)
 LATENT_DIM = 128 #dimension of latent variable sample z
-
+    
 #lib.print_model_settings(locals().copy())
 
 # ==================CPPN Modifications======================
@@ -137,7 +144,7 @@ def generate_image(frame, netG):
 
     samples = samples.cpu().data.numpy()
 
-    lib.save_images.save_images(
+    save_images.save_images(
         samples,
         'tmp/mnist/samples_{}.png'.format(frame)
     )
