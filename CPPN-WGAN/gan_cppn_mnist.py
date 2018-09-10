@@ -24,9 +24,9 @@ if use_cuda:
     
 if not os.path.exists("tmp"):
     os.makedirs("tmp")
-
 if not os.path.exists("tmp/mnist"):
     os.makedirs("tmp/mnist")
+    
 
 DIM = 64 # Model dimensionality
 BATCH_SIZE = 50 # Batch size
@@ -35,8 +35,10 @@ LAMBDA = 10 # Gradient penalty lambda hyperparameter
 ITERS = 60000 # How many generator iterations to train for
 OUTPUT_DIM = 784 # Number of pixels in MNIST (28*28)
 LATENT_DIM = 128 #dimension of latent variable sample z
-    
-#lib.print_model_settings(locals().copy())
+
+
+
+lib.print_model_settings(locals().copy())
 
 # ==================CPPN Modifications======================
 
@@ -281,6 +283,12 @@ if __name__ == "__main__":
         G_cost = -G
         optimizerG.step()
     
+        # Write logs and save samples
+        lib.plot.plot('tmp/mnist/time', time.time() - start_time)
+        lib.plot.plot('tmp/mnist/train disc cost', D_cost.cpu().data.numpy())
+        lib.plot.plot('tmp/mnist/train gen cost', G_cost.cpu().data.numpy())
+        lib.plot.plot('tmp/mnist/wasserstein distance', Wasserstein_D.cpu().data.numpy())
+    
         # Calculate dev loss and generate samples every 100 iters
         if iteration % 100 == 99:
             dev_disc_costs = []
@@ -293,6 +301,7 @@ if __name__ == "__main__":
                 D = netD(imgs_v)
                 _dev_disc_cost = -D.mean().cpu().data.numpy()
                 dev_disc_costs.append(_dev_disc_cost)
+            lib.plot.plot('tmp/mnist/dev disc cost', np.mean(dev_disc_costs))
     
             generate_image(iteration, netG)
         
@@ -300,3 +309,8 @@ if __name__ == "__main__":
             torch.save(netG.state_dict(), "tmp/mnist/G-cppn-wgan_{}.pth".format(iteration))
             torch.save(netD.state_dict(), "tmp/mnist/D-cppn-wgan_{}.pth".format(iteration))
     
+        # Write logs every 100 iters
+        if (iteration < 5) or (iteration % 100 == 99):
+            lib.plot.flush()
+    
+        lib.plot.tick()
